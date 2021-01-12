@@ -1,0 +1,34 @@
+version: '3'
+services:
+  trilium:
+    image: zadam/trilium:0.45.7
+    container_name: trilium
+    restart: unless-stopped
+    environment:
+       - /opt/containers/trilium/data=/data
+    ports:
+       - "8080:8080"
+    networks:
+       - proxy
+    volumes:
+       - '~/trilium-data:/root/trilium-data'
+    labels:
+       - traefik.port=80
+       - traefik.enable=true
+       - traefik.http.routers.trilium.entrypoints=http
+       - traefik.http.routers.trilium.rule=Host(`trilium.domain.com`)
+       - traefik.http.middlewares.trilium-https-redirect.redirectscheme.scheme=https
+       - traefik.http.routers.trilium.middlewares=trilium-https-redirect
+       - traefik.http.routers.trilium-secure.entrypoints=https
+       - traefik.http.routers.trilium-secure.rule=Host(`trilium.domain.com`)
+       - traefik.http.routers.trilium-secure.tls=true
+       - traefik.http.routers.trilium-secure.tls.certresolver=letsencrypt
+       - traefik.http.routers.trilium-secure.service=trilium
+       - traefik.http.services.trilium.loadbalancer.server.port=8080
+
+
+volumes:
+  trilium-data:
+networks:
+  proxy:
+    external: true
